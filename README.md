@@ -197,29 +197,29 @@ dart run build_runner build --delete-conflicting-outputs
 <table align="center">
   <tr>
     <td align="center">
-      <img src="https://github.com/fuldenozsayin/pi_course_mobile/docs/screens/giris_ekrani.png" alt="Giriş Ekranı" width="220"/><br>
+      <img src="./docs/screens/giris_ekrani.png" alt="Giriş Ekranı" width="220"/><br>
       <em>Giriş Ekranı</em>
     </td>
     <td align="center">
-      <img src="https://github.com/fuldenozsayin/pi_course_mobile/docs/screens/egitmen_listesi_ekrani.png" alt="Eğitmen Listesi" width="220"/><br>
+      <img src="./docs/screens/egitmen_listesi_ekrani.png" alt="Eğitmen Listesi" width="220"/><br>
       <em>Eğitmen Listesi</em>
     </td>
     <td align="center">
-      <img src="https://github.com/fuldenozsayin/pi_course_mobile/docs/screens/egitmen_detayi_ekrani.png" alt="Eğitmen Detayı" width="220"/><br>
+      <img src="./docs/screens/egitmen_detayi_ekrani.png" alt="Eğitmen Detayı" width="220"/><br>
       <em>Eğitmen Detayı</em>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://github.com/fuldenozsayin/pi_course_mobile/docs/screens/ders_talebi_olusturma_ekrani.png" alt="Ders Talebi Oluşturma" width="220"/><br>
+      <img src="./docs/screens/ders_talebi_olusturma_ekrani.png" alt="Ders Talebi Oluşturma" width="220"/><br>
       <em>Ders Talebi Oluşturma</em>
     </td>
     <td align="center">
-      <img src="https://github.com/fuldenozsayin/pi_course_mobile/docs/screens/student_talepler.png" alt="Öğrenci Talepleri" width="220"/><br>
+      <img src="./docs/screens/student_talepler.png" alt="Öğrenci Talepleri" width="220"/><br>
       <em>Öğrenci Talepleri</em>
     </td>
     <td align="center">
-      <img src="https://github.com/fuldenozsayin/pi_course_mobile/docs/screens/tutor_taleplerin_hepsi.png" alt="Eğitmen Gelen Ders Talepleri" width="220"/><br>
+      <img src="./docs/screens/tutor_taleplerin_hepsi.png" alt="Eğitmen Gelen Ders Talepleri" width="220"/><br>
       <em>Eğitmen Gelen Ders Talepleri</em>
     </td>
   </tr>
