@@ -50,7 +50,7 @@ class _TutorListPageState extends ConsumerState<TutorListPage> {
     final params = ref.watch(tutorListParamsProvider);
     final listState = ref.watch(tutorListControllerProvider);
 
-    // YENİ: rol
+    // rol
     final auth = ref.watch(authNotifierProvider);
     final role = auth.user?.role; // 'student' | 'tutor'
 
@@ -70,6 +70,9 @@ class _TutorListPageState extends ConsumerState<TutorListPage> {
                 case 'incoming':
                   Navigator.of(context).pushNamed('/incoming_requests');
                   break;
+                case 'tutor_courses': // <- YENİ
+                  Navigator.of(context).pushNamed('/tutor_courses');
+                  break;
                 case 'logout':
                   await ref.read(authNotifierProvider.notifier).logout();
                   if (context.mounted) {
@@ -87,6 +90,9 @@ class _TutorListPageState extends ConsumerState<TutorListPage> {
               if (role == 'tutor')
                 const PopupMenuItem(
                     value: 'incoming', child: Text('Gelen Talepler')),
+              if (role == 'tutor') // <- YENİ
+                const PopupMenuItem(
+                    value: 'tutor_courses', child: Text('Verdiğim Dersler')),
               const PopupMenuDivider(),
               const PopupMenuItem(value: 'logout', child: Text('Çıkış yap')),
             ],
@@ -126,14 +132,14 @@ class _TutorListPageState extends ConsumerState<TutorListPage> {
                     separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (_, i) {
                       if (i == listState.items.length) {
-                        // alt yükleme göstergesi
                         return Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Center(
                             child: listState.loadingMore
                                 ? const CircularProgressIndicator()
                                 : listState.hasMore
-                                ? const Text('Daha fazlası için aşağı kaydırın…')
+                                ? const Text(
+                                'Daha fazlası için aşağı kaydırın…')
                                 : const Text('Hepsi yüklendi'),
                           ),
                         );
@@ -206,7 +212,9 @@ class _Filters extends ConsumerWidget {
                   ),
                   onSubmitted: (v) {
                     final next = {...params, 'search': v};
-                    ref.read(tutorListControllerProvider.notifier).refreshWith(next);
+                    ref
+                        .read(tutorListControllerProvider.notifier)
+                        .refreshWith(next);
                   },
                 ),
               ),
@@ -219,7 +227,9 @@ class _Filters extends ConsumerWidget {
                 ],
                 onChanged: (v) {
                   final next = {...params, 'ordering': v!};
-                  ref.read(tutorListControllerProvider.notifier).refreshWith(next);
+                  ref
+                      .read(tutorListControllerProvider.notifier)
+                      .refreshWith(next);
                 },
               ),
             ],
@@ -233,12 +243,15 @@ class _Filters extends ConsumerWidget {
                 value: selected,
                 items: [
                   const DropdownMenuItem(value: null, child: Text('Tüm dersler')),
-                  ...list.map((s) =>
-                      DropdownMenuItem(value: s.id, child: Text(s.name))),
+                  ...list.map(
+                        (s) => DropdownMenuItem(value: s.id, child: Text(s.name)),
+                  ),
                 ],
                 onChanged: (v) {
                   final next = {...params, 'subjectId': v};
-                  ref.read(tutorListControllerProvider.notifier).refreshWith(next);
+                  ref
+                      .read(tutorListControllerProvider.notifier)
+                      .refreshWith(next);
                 },
               );
             },
@@ -278,8 +291,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Bir şeyler ters gitti.\n$message',
-                textAlign: TextAlign.center),
+            Text('Bir şeyler ters gitti.\n$message', textAlign: TextAlign.center),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: onRetry,

@@ -5,9 +5,15 @@ import 'data/auth_repository.dart';
 import 'data/models/user.dart';
 
 final secureStoreProvider = Provider((_) => SecureStore());
-final apiClientProvider = Provider((ref) => ApiClient(ref.read(secureStoreProvider)));
-final authRepositoryProvider = Provider((ref) =>
-    AuthRepository(ref.read(apiClientProvider), ref.read(secureStoreProvider)));
+final apiClientProvider =
+Provider((ref) => ApiClient(ref.read(secureStoreProvider)));
+
+final authRepositoryProvider = Provider(
+      (ref) => AuthRepository(
+    ref.read(apiClientProvider),
+    ref.read(secureStoreProvider),
+  ),
+);
 
 class AuthState {
   final AppUser? user;
@@ -15,7 +21,11 @@ class AuthState {
   final String? error;
   const AuthState({this.user, this.loading = false, this.error});
   AuthState copyWith({AppUser? user, bool? loading, String? error}) =>
-      AuthState(user: user ?? this.user, loading: loading ?? this.loading, error: error);
+      AuthState(
+        user: user ?? this.user,
+        loading: loading ?? this.loading,
+        error: error,
+      );
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -27,18 +37,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final u = await _repo.login(email: email, password: password);
       state = AuthState(user: u);
-    } catch (_) {
-      state = const AuthState(error: 'Giriş başarısız. Bilgileri kontrol edin.');
+    } catch (e) {
+      state = AuthState(error: e.toString());
     }
   }
 
-  Future<void> register(String email, String username, String password, String role) async {
+  Future<void> register(
+      String email, String username, String password, String role) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      await _repo.register(email: email, username: username, password: password, role: role);
-      await login(email, password); // kayıttan sonra otomatik giriş
-    } catch (_) {
-      state = const AuthState(error: 'Kayıt başarısız. Bilgileri kontrol edin.');
+      await _repo.register(
+        email: email,
+        username: username,
+        password: password,
+        role: role,
+      );
+      // Kayıt sonrası otomatik giriş:
+      final u = await _repo.login(email: email, password: password);
+      state = AuthState(user: u);
+    } catch (e) {
+      state = AuthState(error: e.toString());
     }
   }
 
@@ -49,4 +67,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authNotifierProvider =
-StateNotifierProvider<AuthNotifier, AuthState>((ref) => AuthNotifier(ref.read(authRepositoryProvider)));
+StateNotifierProvider<AuthNotifier, AuthState>(
+        (ref) => AuthNotifier(ref.read(authRepositoryProvider)));

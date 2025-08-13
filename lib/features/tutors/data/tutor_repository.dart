@@ -14,7 +14,7 @@ class TutorRepository {
 
   Future<Tutor> detail(int id) async {
     final r = await _api.dio.get('/tutors/$id');
-    return Tutor.fromJson(r.data as Map<String, dynamic>);
+    return Tutor.fromJson((r.data as Map).cast<String, dynamic>());
   }
 
   /// DRF LimitOffsetPagination destekli liste
@@ -41,7 +41,6 @@ class TutorRepository {
       raw = data['results'] as List;
       nextUrl = data['next'] as String?;
     } else if (data is List) {
-      // Sayfalama yoksa tam liste
       raw = data;
       nextUrl = null;
     } else {
@@ -49,7 +48,7 @@ class TutorRepository {
     }
 
     final items = raw
-        .map((e) => Tutor.fromJson(e as Map<String, dynamic>))
+        .map((e) => Tutor.fromJson((e as Map).cast<String, dynamic>()))
         .toList(growable: false);
 
     int? nextOffset;
@@ -64,5 +63,58 @@ class TutorRepository {
     }
 
     return TutorPage(items: items, nextOffset: nextOffset);
+  }
+
+  // ---------- Tutor özel uçlar / normalizasyon ----------
+
+  /// /api/me cevabını tutor açısından normalize eder.
+  /// Bazı backend’lerde tutor alanları `tutor_profile` altında gelir.
+  Future<Map<String, dynamic>> meTutor() async {
+    final r = await _api.dio.get('/me');
+    final me = (r.data as Map).cast<String, dynamic>();
+
+    final profile = (me['tutor_profile'] as Map?)?.cast<String, dynamic>();
+    if (profile == null) return me;
+
+    // Kök seviyeye yedir (subjects / hourly_rate / rating)
+    return {
+      ...me,
+      'subjects': profile['subjects'] ?? me['subjects'],
+      'hourly_rate': profile['hourly_rate'] ?? me['hourly_rate'],
+      'rating': profile['rating'] ?? me['rating'],
+    };
+  }
+
+  /// Sistem ders listesi – hem düz listeyi hem de {results:[...]}’ı destekler.
+  Future<List<Map<String, dynamic>>> subjects() async {
+    final r = await _api.dio.get('/subjects');
+    final data = r.data;
+
+    late final List list;
+    if (data is Map<String, dynamic> && data['results'] is List) {
+      list = data['results'] as List;
+    } else if (data is List) {
+      list = data;
+    } else {
+      throw StateError('Unexpected /subjects payload: $data');
+    }
+
+    return list
+        .cast<Map>()
+        .map((e) => e.cast<String, dynamic>())
+        .toList(growable: false);
+  }
+
+  /// Tutor profilini güncelle (backend’in PATCH /api/me’yi kabul ettiğini varsayıyoruz).
+  Future<void> updateTutor({
+    required List<int> subjectIds,
+    required int hourlyRate,
+    required double rating,
+  }) async {
+    await _api.dio.patch('/me', data: {
+      'subjects': subjectIds,
+      'hourly_rate': hourlyRate,
+      'rating': rating,
+    });
   }
 }
