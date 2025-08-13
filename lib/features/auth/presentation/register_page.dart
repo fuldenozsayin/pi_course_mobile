@@ -2,152 +2,104 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 
-class MePage extends ConsumerStatefulWidget {
-  const MePage({super.key});
+class RegisterPage extends ConsumerStatefulWidget {
+  const RegisterPage({super.key});
   @override
-  ConsumerState<MePage> createState() => _MePageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _MePageState extends ConsumerState<MePage> {
-  final _bio = TextEditingController();
-  final _grade = TextEditingController();
+class _RegisterPageState extends ConsumerState<RegisterPage> {
+  final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _username = TextEditingController();
-
-  Map<String, dynamic>? me;
+  final _password = TextEditingController();
+  String _role = 'student';
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    me = await ref.read(authRepositoryProvider).meRaw();
-    _bio.text = (me?['bio'] ?? '') as String;
-    _grade.text = (me?['grade_level'] ?? '') as String;
-    _email.text = (me?['email'] ?? '') as String;
-    _username.text = (me?['username'] ?? '') as String;
-    if (mounted) setState(() {});
+  void dispose() {
+    _email.dispose();
+    _username.dispose();
+    _password.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (me == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    final role = (me!['role'] ?? '') as String;
-    final isStudent = role == 'student';
-    final isTutor = role == 'tutor';
+    final auth = ref.watch(authNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profilim')),
+      appBar: AppBar(title: const Text('Kayıt')),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            // Başlık bilgiler
-            Text('Rol: $role'),
-            const SizedBox(height: 16),
-
-            // Öğrenciye: email & username düzenlenebilir
-            if (isStudent) ...[
-              TextField(
+        child: Form(
+          key: _form,
+          child: ListView(
+            children: [
+              TextFormField(
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email'),
+                validator: (v) => (v == null || v.isEmpty) ? 'Email zorunlu' : null,
               ),
-              const SizedBox(height: 8),
-              TextField(
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: _username,
                 decoration: const InputDecoration(labelText: 'Kullanıcı adı'),
+                validator: (v) => (v == null || v.isEmpty) ? 'Kullanıcı adı zorunlu' : null,
               ),
-              const SizedBox(height: 8),
-            ] else ...[
-              Text('Email: ${me!['email']}'),
-              Text('Kullanıcı adı: ${me!['username']}'),
-              const SizedBox(height: 8),
-            ],
-
-            // Eğitmene: Bio düzenlenebilir
-            if (isTutor) ...[
-              TextField(
-                controller: _bio,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Bio'),
-              ),
-              const SizedBox(height: 8),
-            ] else ...[
-              // Öğrencide bio gösterilebilir (opsiyonel)
-              if ((_bio.text).isNotEmpty) ...[
-                const Text('Bio'),
-                const SizedBox(height: 4),
-                Text(_bio.text),
-                const SizedBox(height: 8),
-              ],
-            ],
-
-            // Öğrenciye: Sınıf alanı düzenlenebilir
-            if (isStudent) ...[
-              TextField(
-                controller: _grade,
-                decoration: const InputDecoration(labelText: 'Sınıf (öğrenci için)'),
-              ),
-              const SizedBox(height: 16),
-            ] else ...[
-              if (_grade.text.isNotEmpty) Text('Sınıf: ${_grade.text}'),
-              const SizedBox(height: 16),
-            ],
-
-            // Kaydet
-            ElevatedButton(
-              onPressed: () async {
-                final payload = <String, dynamic>{};
-
-                if (isStudent) {
-                  payload['email'] = _email.text.trim();
-                  payload['username'] = _username.text.trim();
-                  payload['grade_level'] =
-                  _grade.text.trim().isEmpty ? null : _grade.text.trim();
-                }
-                if (isTutor) {
-                  payload['bio'] = _bio.text.trim();
-                }
-
-                if (payload.isEmpty) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Güncellenecek alan yok')),
-                  );
-                  return;
-                }
-
-                await ref.read(authRepositoryProvider).updateMe(payload);
-                if (!mounted) return;
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('Güncellendi')));
-              },
-              child: const Text('Kaydet'),
-            ),
-
-            // Eğitmene: Verdiğim Dersler kısayolu (sayfan hazırsa açılır)
-            if (isTutor) ...[
               const SizedBox(height: 12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.menu_book),
-                label: const Text('Verdiğim Dersler'),
-                onPressed: () {
-                  // Eğer route tanımladıysan:
-                  // Navigator.of(context).pushNamed('/tutor/subjects');
-                  // veya sayfayı doğrudan import edip:
-                  // Navigator.of(context).push(MaterialPageRoute(
-                  //   builder: (_) => const TutorSubjectsPage(),
-                  // ));
+              TextFormField(
+                controller: _password,
+                decoration: const InputDecoration(labelText: 'Şifre'),
+                obscureText: true,
+                validator: (v) => (v == null || v.length < 6) ? 'Min 6 karakter' : null,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _role,
+                decoration: const InputDecoration(labelText: 'Rol'),
+                items: const [
+                  DropdownMenuItem(value: 'student', child: Text('Öğrenci')),
+                  DropdownMenuItem(value: 'tutor', child: Text('Eğitmen')),
+                ],
+                onChanged: (String? v) => setState(() => _role = v ?? 'student'),
+              ),
+              const SizedBox(height: 16),
+
+              if (auth.error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(auth.error!, style: const TextStyle(color: Colors.red)),
+                ),
+
+              ElevatedButton(
+                onPressed: auth.loading
+                    ? null
+                    : () async {
+                  if (!_form.currentState!.validate()) return;
+
+                  // !!! Buradaki parametre sırasını kendi register(...) imzana göre ayarla
+                  await ref.read(authNotifierProvider.notifier).register(
+                    _email.text.trim(),
+                    _username.text.trim(),
+                    _password.text,
+                    _role,
+                  );
+
+                  if (!mounted) return;
+                  if (ref.read(authNotifierProvider).user != null) {
+                    Navigator.of(context).pop(); // Login'e geri
+                  }
                 },
+                child: auth.loading
+                    ? const SizedBox(
+                  width: 18, height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : const Text('Kayıt Ol'),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
